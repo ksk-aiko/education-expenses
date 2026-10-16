@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>教育費貯蓄プランナー</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <header>
+    <h1>教育費貯蓄プランナー</h1>
+    <p>進路・費用項目・金額を選ぶと、支払い時期ごとの費用と、必要な月額積立を計算します。</p>
+  </header>
+
+  <div class="layout">
+    <form id="form" class="panel" autocomplete="off">
+      <h2>1. 基本条件</h2>
+      <div class="row">
+        <label>計画開始月<input type="month" data-path="startYM"></label>
+        <label>中学入学年（4月）<input type="number" data-path="entryYear" min="2025" max="2060" step="1"></label>
+      </div>
+      <div class="row">
+        <label>現在の教育費専用貯蓄（万円）<input type="number" data-path="savings" min="0" step="0.5"></label>
+        <label>家計から毎月出せる教育費（円）<input type="number" data-path="household" min="0" step="1000"></label>
+      </div>
+      <div class="row">
+        <label>あなたの負担割合（%）<input type="number" data-path="share" min="0" max="100" step="5"></label>
+        <label>費用水準
+          <select id="level" data-path="level">
+            <option value="low">低め（標準の80%）</option>
+            <option value="mid">標準</option>
+            <option value="high">高め（標準の120%）</option>
+          </select>
+        </label>
+      </div>
+      <p class="hint">費用水準を変えると、下の各項目の金額が初期値から再計算されます。その後は金額を自由に書き換えられます。</p>
+
+      <h2>2. 公立中学（3年間）</h2>
+      <label class="check"><input type="checkbox" data-path="junior.on"> 公立中学の費用を計画に含める</label>
+      <div class="items" id="juniorItems">
+        <div class="item"><label class="check"><input type="checkbox" data-path="junior.school.on"> 学校費</label><input type="number" data-path="junior.school.amount" min="0" step="0.5"><span>万円</span></div>
+        <div class="item"><label class="check"><input type="checkbox" data-path="junior.soccer.on"> サッカー部</label><input type="number" data-path="junior.soccer.amount" min="0" step="0.5"><span>万円</span></div>
+        <div class="item"><label class="check"><input type="checkbox" data-path="junior.juku.on"> 塾</label><input type="number" data-path="junior.juku.amount" min="0" step="0.5"><span>万円</span></div>
+      </div>
+
+      <h2>3. 高校（3年間）</h2>
+      <label>進路
+        <select id="highType" data-path="high.type">
+          <option value="public">公立高校</option>
+          <option value="private">私立高校</option>
+          <option value="none">高校費用を含めない</option>
+        </select>
+      </label>
+      <div class="items" id="highItems">
+        <div class="item"><label class="check"><input type="checkbox" data-path="high.school.on"> 学校費（授業料支援後）</label><input type="number" data-path="high.school.amount" min="0" step="0.5"><span>万円</span></div>
+        <div class="item"><label class="check"><input type="checkbox" data-path="high.soccer.on"> サッカー部</label><input type="number" data-path="high.soccer.amount" min="0" step="0.5"><span>万円</span></div>
+        <div class="item"><label class="check"><input type="checkbox" data-path="high.juku.on"> 塾</label><input type="number" data-path="high.juku.amount" min="0" step="0.5"><span>万円</span></div>
+      </div>
+
+      <h2>4. 大学（4年間）</h2>
+      <label>進路
+        <select id="univType" data-path="univ.type">
+          <option value="none">大学費用を含めない</option>
+          <option value="pub_home">国公立大学・自宅通学</option>
+          <option value="priv_home">私立文系大学・自宅通学</option>
+          <option value="pub_away">国公立大学・下宿</option>
+          <option value="priv_away">私立文系大学・下宿</option>
+        </select>
+      </label>
+      <div class="items" id="univItems">
+        <div class="item"><span>4年間の総額</span><input type="number" data-path="univ.amount" min="0" step="10"><span>万円</span></div>
+      </div>
+
+      <h2>5. 積立方法</h2>
+      <label>月額積立（円）<input type="number" data-path="deposit" min="0" step="1000" placeholder="空欄＝不足しない最小額を自動計算"></label>
+      <div class="actions">
+        <button type="button" id="reset">初期値に戻す</button>
+      </div>
+    </form>
+
+    <section id="result" class="results" aria-live="polite"></section>
+  </div>
+
+  <section class="panel notes">
+    <h2>前提と注意</h2>
+    <ul>
+      <li>金額は、参考資料に記載された概算（熊本市・子ども1人・自宅通学を想定）を初期値にした予算モデルで、学校ごとの確定料金ではありません。</li>
+      <li>各段階は、入学月（4月）に「入学時一時金」を払い、残りを在学月数で均等に払うと仮置きしています。実際の請求時期に合わせて見直してください。</li>
+      <li>奨学金・就学援助・授業料減免・アルバイト収入、運用益・物価上昇は反映していません。</li>
+      <li>大学の受験・入学準備費は入学年度に計上しています。実際は入学前から発生します。</li>
+      <li>負担割合を設定すると、全費用にその割合を掛けた額があなたの負担になります。法的な負担割合を示すものではありません。</li>
+      <li>入力内容はこのブラウザ内（localStorage）にだけ保存され、サーバーには送信されません。</li>
+    </ul>
+  </section>
+</main>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
