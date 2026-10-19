@@ -15,6 +15,9 @@ export function fiscalYear(idx) {
   return (idx % 12) >= 3 ? y : y - 1;
 }
 
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+const sumAmounts = (items) => items.reduce((total, item) => total + item.amount, 0);
+
 /**
  * stages: [{ id, label, startYM, months, lump, items: [{label, amount}] }]
  *   lump: 開始月に一括で支払う額（段階の合計を上限とする）。残りは months で均等割り。
@@ -31,8 +34,8 @@ export function buildTimeline(stages, startYM) {
 
   const stageTotals = {};
   for (const s of active) {
-    const total = s.items.reduce((a, i) => a + i.amount, 0);
-    const lump = Math.min(Math.max(s.lump || 0, 0), total);
+    const total = sumAmounts(s.items);
+    const lump = clamp(s.lump || 0, 0, total);
     const monthly = (total - lump) / s.months;
     const sIdx = parseYM(s.startYM);
     stageTotals[s.id] = total;
@@ -57,12 +60,12 @@ export function buildTimeline(stages, startYM) {
  */
 export function solvePlan({ stages, startYM, share = 1, household = 0, savings = 0, deposit = null }) {
   const tl = buildTimeline(stages, startYM);
-  const n = tl.months.length;
   const rows = tl.months.map((m) => {
     const cost = m.total * share;
     const fromHousehold = Math.min(cost, household);
     return { idx: m.idx, byStage: m.byStage, cost, fromHousehold, shortfall: cost - fromHousehold };
   });
+  const n = rows.length;
 
   // 月初に積立→当月の不足分を貯蓄から支払う。残高 S + x*t - D_t >= 0 を満たす最小の x
   let cum = 0;
@@ -87,14 +90,15 @@ export function solvePlan({ stages, startYM, share = 1, household = 0, savings =
     minBalance = Math.min(minBalance, bal);
   }
 
-  const sum = (k) => rows.reduce((a, r) => a + r[k], 0);
+  const sumBy = (key) => rows.reduce((total, row) => total + row[key], 0);
+  const totalShortfall = sumBy('shortfall');
   return {
     tl, rows, n,
-    totalCost: sum('cost'),
-    fromHousehold: sum('fromHousehold'),
-    fromSavings: sum('shortfall'),
+    totalCost: sumBy('cost'),
+    fromHousehold: sumBy('fromHousehold'),
+    fromSavings: totalShortfall,
     autoDeposit, used, firstShortage, minBalance,
-    evenSplit: n ? Math.max(0, (sum('shortfall') - savings) / n) : 0,
+    evenSplit: n ? Math.max(0, (totalShortfall - savings) / n) : 0,
     finalBalance: rows.length ? rows[rows.length - 1].balance : savings,
   };
 }
