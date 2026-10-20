@@ -141,7 +141,7 @@ function render() {
     <div class="box">
       <h3>貯蓄残高の推移</h3>
       ${chart(plan)}
-      <div class="legend"><span><i style="background:#087d79"></i>貯蓄残高</span><span><i style="background:#a36310"></i>費用の累計</span></div>
+      <div class="legend"><span><i class="sw-bal"></i>貯蓄残高</span><span><i class="sw-cost"></i>費用の累計</span></div>
     </div>
 
     <h2>段階別</h2>
@@ -150,8 +150,7 @@ function render() {
     <h2>年度別</h2>
     <div class="scroller"><table><thead><tr><th>年度</th>${stageIds.map((id) => `<th>${stageLabel[id]}</th>`).join('')}<th>費用合計</th><th>貯蓄から支出</th><th>年度末残高</th></tr></thead><tbody>${yearRows}
       <tr class="total"><td>合計</td>${stageIds.map((id) => `<td>${man(sumStage(id))}</td>`).join('')}<td>${man(plan.totalCost)}</td><td>${man(plan.fromSavings)}</td><td></td></tr></tbody></table></div>
-
-    <p class="actions"><button type="button" class="primary" onclick="window.print()">印刷・PDF保存</button></p>`;
+`;
 }
 
 function chart(plan) {
@@ -168,18 +167,18 @@ function chart(plan) {
   let grid = '';
   for (let k = 0; k <= 4; k++) {
     const v = ymin + ((ymax - ymin) * k) / 4;
-    grid += `<line x1="${L}" x2="${W - R}" y1="${py(v)}" y2="${py(v)}" stroke="#dce6ec"/><text x="${L - 6}" y="${py(v) + 4}" text-anchor="end" font-size="11" fill="#526577">${Math.round(v / 10000).toLocaleString('ja-JP')}</text>`;
+    grid += `<line x1="${L}" x2="${W - R}" y1="${py(v)}" y2="${py(v)}" class="g"/><text class="t" x="${L - 6}" y="${py(v) + 4}" text-anchor="end" font-size="11">${Math.round(v / 10000).toLocaleString('ja-JP')}</text>`;
   }
   let ticks = '';
   for (let i = x0; i <= x1; i++) {
-    if (i % 12 === 3) ticks += `<text x="${px(i)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="#526577">${Math.floor(i / 12)}/4</text>`;
+    if (i % 12 === 3) ticks += `<text class="t" x="${px(i)}" y="${H - 8}" text-anchor="middle" font-size="11">${Math.floor(i / 12)}/4</text>`;
   }
-  const zero = ymin < 0 ? `<line x1="${L}" x2="${W - R}" y1="${py(0)}" y2="${py(0)}" stroke="#b3261e" stroke-dasharray="4 3"/>` : '';
+  const zero = ymin < 0 ? `<line x1="${L}" x2="${W - R}" y1="${py(0)}" y2="${py(0)}" class="z" stroke-dasharray="4 3"/>` : '';
   return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="貯蓄残高と費用累計の推移（縦軸：万円）">
     ${grid}${zero}${ticks}
-    <polyline points="${line('cumCost')}" fill="none" stroke="#a36310" stroke-width="2"/>
-    <polyline points="${line('balance')}" fill="none" stroke="#087d79" stroke-width="2.5"/>
-    <text x="4" y="10" font-size="11" fill="#526577">万円</text></svg>`;
+    <polyline points="${line('cumCost')}" class="s-cost" fill="none" stroke-width="2"/>
+    <polyline points="${line('balance')}" class="s-bal" fill="none" stroke-width="2.5"/>
+    <text class="t" x="4" y="10" font-size="11">万円</text></svg>`;
 }
 
 syncForm();
